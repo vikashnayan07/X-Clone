@@ -16,6 +16,8 @@ import { HiPlusSm } from "react-icons/hi";
 import toast from "react-hot-toast";
 import { graphqlClient } from "@/client/api";
 import { verifyGoogleUserTokenQuery } from "@/graphql/query/user";
+import { useCurrentUser } from "@/hooks/user";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface TwitterSideBar {
   title: string;
@@ -34,6 +36,9 @@ const sideBarButton: TwitterSideBar[] = [
 ];
 
 export default function Home() {
+  const { user } = useCurrentUser();
+  const queryClient = useQueryClient();
+
   const handleLoginWithGoogle = useCallback(
     async (cred: CredentialResponse) => {
       const googleToken = cred.credential;
@@ -51,13 +56,15 @@ export default function Home() {
       console.log(verifyGoogleToken);
       if (verifyGoogleToken)
         window.localStorage.setItem("twitter-token", verifyGoogleToken);
+
+      await queryClient.invalidateQueries(["current-user"]);
     },
-    []
+    [queryClient]
   );
   return (
     <div>
       <div className="grid grid-cols-12 h-screen w-screen px-56">
-        <div className="col-span-3  pt-1 ml-20  scrollbar-thin overflow-y-scroll overflow-x-hidden ">
+        <div className="col-span-3  pt-1 ml-10  scrollbar-thin overflow-y-scroll overflow-x-hidden relative ">
           <div className="text-3xl h-fit hover:bg-zinc-800 rounded-full p-3 cursor-pointer transition-all w-fit">
             <BsTwitterX />
           </div>
@@ -85,6 +92,24 @@ export default function Home() {
               </button>
             </div>
           </div>
+          {user && (
+            <div className=" absolute bottom-1 flex gap-2 items-center bg-slate-700 px-4 py-2  rounded-full ">
+              {user && user.profileImageURL && (
+                <Image
+                  className="rounded-full"
+                  src={user?.profileImageURL}
+                  alt="user-profile"
+                  height={50}
+                  width={50}
+                />
+              )}
+              <div>
+                <h3 className="text-xl ">
+                  {user.firstName} {user.lastName}
+                </h3>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="col-span-6 border-r-[0.1px] border-l-[0.1px]  border-gray-600   overflow-y-scroll no-scrollbar  ">
@@ -103,10 +128,12 @@ export default function Home() {
         </div>
 
         <div className="col-span-3 p-5">
-          <div className=" p-5 bg-slate-800 rounded-lg">
-            <h1 className="text-2xl my-2 mx-2">New to Twitter</h1>
-            <GoogleLogin onSuccess={handleLoginWithGoogle} />
-          </div>
+          {!user && (
+            <div className=" p-5 bg-slate-800 rounded-lg">
+              <h1 className="text-2xl my-2 mx-2">New to Twitter</h1>
+              <GoogleLogin onSuccess={handleLoginWithGoogle} />
+            </div>
+          )}
         </div>
       </div>
     </div>
