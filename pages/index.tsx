@@ -1,23 +1,32 @@
 import Image from "next/image";
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { BsFeather, BsTwitterX } from "react-icons/bs";
 
 import { GoHome } from "react-icons/go";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
-import { IoNotificationsOutline, IoSearch } from "react-icons/io5";
-import { FaRegEnvelope, FaRegUser } from "react-icons/fa";
+import {
+  IoImageOutline,
+  IoLocationOutline,
+  IoNotificationsOutline,
+  IoSearch,
+} from "react-icons/io5";
+import { FaRegEnvelope, FaRegSmile, FaRegUser } from "react-icons/fa";
 import { LiaUserFriendsSolid } from "react-icons/lia";
 import { CgMoreO } from "react-icons/cg";
 import Feed from "@/components/Feed";
 
 import { LuSquareSlash } from "react-icons/lu";
 
-import { HiPlusSm } from "react-icons/hi";
 import toast from "react-hot-toast";
 import { graphqlClient } from "@/client/api";
 import { verifyGoogleUserTokenQuery } from "@/graphql/query/user";
 import { useCurrentUser } from "@/hooks/user";
 import { useQueryClient } from "@tanstack/react-query";
+
+import { MdOutlineGif } from "react-icons/md";
+import { RiCalendarScheduleLine, RiListRadio } from "react-icons/ri";
+import { useCreateTweets, useGetAllTweets } from "@/hooks/tweets";
+import { Tweet } from "@/gql/graphql";
 
 interface TwitterSideBar {
   title: string;
@@ -37,7 +46,22 @@ const sideBarButton: TwitterSideBar[] = [
 
 export default function Home() {
   const { user } = useCurrentUser();
+  const { tweets = [] } = useGetAllTweets();
+  const { mutate } = useCreateTweets();
   const queryClient = useQueryClient();
+  const [content, setContent] = useState("");
+
+  const handleSelectImage = useCallback(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
+  }, []);
+  const handleCreateTweet = useCallback(() => {
+    mutate({
+      content,
+    });
+  }, [content, mutate]);
 
   const handleLoginWithGoogle = useCallback(
     async (cred: CredentialResponse) => {
@@ -57,14 +81,14 @@ export default function Home() {
       if (verifyGoogleToken)
         window.localStorage.setItem("twitter-token", verifyGoogleToken);
 
-      await queryClient.invalidateQueries(["current-user"]);
+      await queryClient.invalidateQueries({ queryKey: ["current-user"] });
     },
     [queryClient]
   );
   return (
     <div>
-      <div className="grid grid-cols-12 h-screen w-screen px-56">
-        <div className="col-span-3  pt-1 ml-10  scrollbar-thin overflow-y-scroll overflow-x-hidden relative ">
+      <div className="grid grid-cols-12 h-screen w-screen px-[100px]">
+        <div className="col-span-3  pt-1 ml-10   relative ">
           <div className="text-3xl h-fit hover:bg-zinc-800 rounded-full p-3 cursor-pointer transition-all w-fit">
             <BsTwitterX />
           </div>
@@ -81,30 +105,24 @@ export default function Home() {
               ))}
             </ul>
             <div className="mt-3 px-3 ">
-              <button className="bg-[#1d9bf0] rounded-full px-6 py-3 mr-3">
-                <div className="items-center ">
-                  {" "}
-                  <HiPlusSm className="text-2xl font-bold " />{" "}
-                </div>
-                <div className=" mt-[-4px] ">
-                  <BsFeather className="text-3xl " />
-                </div>
+              <button className="bg-[#1d9bf0] rounded-full px-4 py-3  w-full font-semibold text-lg ">
+                Post
               </button>
             </div>
           </div>
           {user && (
-            <div className=" absolute bottom-1 flex gap-2 items-center bg-slate-700 px-4 py-2  rounded-full ">
+            <div className=" absolute bottom-1 flex gap-2 items-center bg-zinc-800 px-3 py-2  rounded-full ">
               {user && user.profileImageURL && (
                 <Image
                   className="rounded-full"
                   src={user?.profileImageURL}
                   alt="user-profile"
-                  height={50}
-                  width={50}
+                  height={38}
+                  width={38}
                 />
               )}
               <div>
-                <h3 className="text-xl ">
+                <h3 className=" text-base font-medium">
                   {user.firstName} {user.lastName}
                 </h3>
               </div>
@@ -113,18 +131,57 @@ export default function Home() {
         </div>
 
         <div className="col-span-6 border-r-[0.1px] border-l-[0.1px]  border-gray-600   overflow-y-scroll no-scrollbar  ">
-          <Feed />
-          <Feed />
+          <div>
+            <div className="border border-r-0 border-l-0 border-b-0 border-gray-600 p-5 hover:bg-zinc-950 transition-all cursor-pointer">
+              <div className="grid grid-cols-12 gap-3">
+                <div className="col-span-1">
+                  {user?.profileImageURL && (
+                    <Image
+                      className="rounded-full"
+                      src={user?.profileImageURL}
+                      alt="user-pro"
+                      height={50}
+                      width={50}
+                    />
+                  )}
+                </div>
+                <div className="col-span-11">
+                  <textarea
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    className="w-full bg-transparent text-xl px-3 border-b border-zinc-700"
+                    rows={3}
+                    placeholder="What's happening?!"
+                  ></textarea>
+                  <div className="mt-2 flex justify-between items-center">
+                    <div className="flex items-center gap-5">
+                      <IoImageOutline
+                        onClick={handleSelectImage}
+                        className="text-xl"
+                      />
+                      <MdOutlineGif className="text-[20px] border-2 rounded-sm" />
+                      <RiListRadio className="text-xl" />
+                      <FaRegSmile className="text-xl" />
+                      <RiCalendarScheduleLine className="text-xl" />
+                      <IoLocationOutline className="text-xl" />
+                    </div>
 
-          <Feed />
-          <Feed />
-          <Feed />
-          <Feed />
-
-          <Feed />
-          <Feed />
-          <Feed />
-          <Feed />
+                    <div>
+                      <button
+                        onClick={handleCreateTweet}
+                        className="bg-[#1d9bf0] rounded-full px-5 py-2   font-semibold text-sm "
+                      >
+                        Post
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {tweets?.map((tweet) =>
+            tweet ? <Feed key={tweet?.id} data={tweet as Tweet} /> : null
+          )}
         </div>
 
         <div className="col-span-3 p-5">
