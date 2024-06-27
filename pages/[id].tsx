@@ -44,7 +44,9 @@ const UserProfile: NextPage<ServerProps> = (props) => {
                 width={150}
               />
             )}
-            <h1 className="text-2xl font-bold mt-5">Vikash Nayan</h1>
+            <h1 className="text-2xl font-bold mt-5">
+              {props.userInfo?.firstName} {props.userInfo?.lastName}
+            </h1>
           </div>
 
           <div>

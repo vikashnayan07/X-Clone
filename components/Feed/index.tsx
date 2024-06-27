@@ -34,6 +34,15 @@ const Feed: React.FC<FeedProps> = (props) => {
             </Link>
           </h5>
           <p>{data.content}</p>
+          {data.imageURL && (
+            <Image
+              className="mt-3 rounded-sm  outline-blue-300 outline outline-2 outline-offset-2 ..."
+              src={data.imageURL}
+              alt="post-image"
+              width={450}
+              height={400}
+            />
+          )}
           <div className="flex justify-between mt-5 text-xl items-center p-2 w-[90%]">
             <div>
               <LuMessageCircle />

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import { IoImageOutline, IoLocationOutline } from "react-icons/io5";
 import { FaRegSmile } from "react-icons/fa";
@@ -15,7 +15,12 @@ import { Tweet } from "@/gql/graphql";
 import TwitterLayout from "@/components/Feed/Layout/TwitterLayout";
 import { GetServerSideProps } from "next";
 import { graphqlClient } from "@/client/api";
-import { getAllTweetsQuery } from "@/graphql/query/tweets";
+import {
+  getAllTweetsQuery,
+  getSignedURLForTweetsQuery,
+} from "@/graphql/query/tweets";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 interface HomeProps {
   tweets: Tweet[];
@@ -23,22 +28,57 @@ interface HomeProps {
 
 export default function Home(props: HomeProps) {
   const { user } = useCurrentUser();
-
-  const { mutate } = useCreateTweets();
+  const { tweets = props.tweets as Tweet[] } = useGetAllTweets();
+  const { mutateAsync } = useCreateTweets();
 
   const [content, setContent] = useState("");
+  const [imageURL, setImageURL] = useState("");
+
+  const handleInputChangeFile = useCallback((input: HTMLInputElement) => {
+    return async (event: Event) => {
+      event.preventDefault();
+      const file: File | null | undefined = input.files?.item(0);
+      if (!file) return;
+
+      const { getSingnedURLForTweet } = await graphqlClient.request(
+        getSignedURLForTweetsQuery,
+        { imageName: file.name, imageType: file.type }
+      );
+
+      if (getSingnedURLForTweet) {
+        toast.loading("File Uploading", { id: "3" });
+        await axios.put(getSingnedURLForTweet, file, {
+          headers: {
+            "Content-Type": file.type,
+          },
+        });
+        toast.success("File Uploaded", { id: "3" });
+
+        const url = new URL(getSingnedURLForTweet);
+        const myFilePath = `${url.origin}${url.pathname}`;
+        setImageURL(myFilePath);
+      }
+    };
+  }, []);
 
   const handleSelectImage = useCallback(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "file");
     input.setAttribute("accept", "image/*");
+
+    const handleFn = handleInputChangeFile(input);
+
+    input.addEventListener("change", handleFn);
     input.click();
-  }, []);
-  const handleCreateTweet = useCallback(() => {
-    mutate({
+  }, [handleInputChangeFile]);
+  const handleCreateTweet = useCallback(async () => {
+    await mutateAsync({
       content,
+      imageURL,
     });
-  }, [content, mutate]);
+    setContent("");
+    setImageURL("");
+  }, [mutateAsync, content, imageURL]);
 
   return (
     <div>
@@ -77,6 +117,14 @@ export default function Home(props: HomeProps) {
                   rows={3}
                   placeholder="What's happening?!"
                 ></textarea>
+                {imageURL && (
+                  <Image
+                    src={imageURL}
+                    alt="post-image"
+                    width={300}
+                    height={300}
+                  />
+                )}
                 <div className="mt-2 flex justify-between items-center">
                   <div className="flex items-center gap-5">
                     <IoImageOutline
@@ -109,7 +157,7 @@ export default function Home(props: HomeProps) {
             </div>
           </div>
         </div>
-        {props.tweets?.map((tweet) =>
+        {tweets?.map((tweet) =>
           tweet ? <Feed key={tweet?.id} data={tweet as Tweet} /> : null
         )}
       </TwitterLayout>
