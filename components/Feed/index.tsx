@@ -43,7 +43,7 @@ const Feed: React.FC<FeedProps> = (props) => {
               height={400}
             />
           )}
-          <div className="flex justify-between mt-5 text-xl items-center p-2 w-[90%]">
+          <div className="flex justify-between mt-4 text-md items-center p-2 w-[90%]">
             <div>
               <LuMessageCircle />
             </div>

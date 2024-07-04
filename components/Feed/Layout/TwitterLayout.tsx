@@ -74,32 +74,32 @@ const TwitterLayout: React.FC<TwitterLayoutProps> = (props) => {
             <div className="text-3xl h-fit hover:bg-zinc-800 rounded-full p-3 cursor-pointer transition-all w-fit">
               <BsTwitterX />
             </div>
-            <div className="mt-1 text-xl font-semibold pr-4 ">
+            <div className=" text-xl font-semibold pr-4 ">
               <ul>
                 {sideBarButton.map((item) => (
                   <li key={item.title}>
                     <Link
                       href={item.link}
-                      className="flex justify-start items-center gap-4 hover:bg-zinc-800 cursor-pointer transition-all rounded-full w-fit px-3 py-3 mt-2"
+                      className="flex justify-start items-center gap-4 hover:bg-zinc-800 cursor-pointer transition-all rounded-full w-fit px-3 py-3 "
                     >
-                      <span className="text-3xl">{item.icon}</span>{" "}
+                      <span className="text-2xl">{item.icon}</span>{" "}
                       <span className="hidden sm:inline">{item.title}</span>
                     </Link>
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 px-5 ">
-                <button className="hidden sm:block bg-[#1d9bf0] rounded-full px-5 py-3  w-full  font-semibold text-lg ">
+              <div className="mt-2 px-3 ">
+                <button className="hidden sm:block bg-[#1d9bf0] rounded-full px-3 py-[8px]  w-full  font-semibold text-lg ">
                   Post
                 </button>
-                <button className="block sm:hidden bg-[#1d9bf0] rounded-full px-4 py-[15px]  font-semibold text-lg mx-[-9px] ">
+                <button className="block sm:hidden bg-[#1d9bf0] rounded-full px-4 py-[20px]  font-semibold text-lg mx-[-9px] ">
                   <BsFeather />
                 </button>
               </div>
             </div>
           </div>
           {user && (
-            <div className=" absolute bottom-1 flex gap-2 items-center bg-zinc-800 px-3 py-2  rounded-full  ">
+            <div className=" absolute bottom-1 flex gap-2 items-center bg-zinc-800 px-[9px] py-1  rounded-full  ">
               {user && user.profileImageURL && (
                 <Image
                   className="rounded-full"
@@ -118,15 +118,45 @@ const TwitterLayout: React.FC<TwitterLayoutProps> = (props) => {
           )}
         </div>
 
-        <div className="col-span-10 sm:col-span-5 border-r-[0.1px] border-l-[0.1px]  border-gray-600   overflow-y-scroll no-scrollbar  ">
+        <div className="col-span-10 sm:col-span-5 border-r-[0.1px] border-l-[0.1px]  border-gray-600   overflow-y-scroll no-scrollbar ">
           {props.children}
         </div>
 
         <div className="col-span-0 sm:col-span-3 p-5">
-          {!user && (
+          {!user ? (
             <div className=" p-5 bg-slate-800 rounded-lg">
               <h1 className="text-2xl my-2 mx-2">New to Twitter</h1>
               <GoogleLogin onSuccess={handleLoginWithGoogle} />
+            </div>
+          ) : (
+            <div className=" px-6 py-3 bg-gray-900 rounded-lg">
+              <h1 className="text-2xl my-2 mx-2 font-semibold mb-5">
+                who to follow
+              </h1>
+              {user?.recommendedUsers?.map((el) => (
+                <div key={el?.id} className="flex gap-2 items-center mt-3 ">
+                  {el?.profileImageURL && (
+                    <Image
+                      className=" rounded-full "
+                      src={el?.profileImageURL}
+                      alt="img-user"
+                      width={50}
+                      height={50}
+                    />
+                  )}
+                  <div>
+                    <div className="text-lg ">
+                      {el?.firstName} {el?.lastName}
+                    </div>
+                    <Link
+                      href={`/${el?.id}`}
+                      className="bg-white text-black text-sm w-full px-4 py-1 rounded-lg "
+                    >
+                      View
+                    </Link>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
